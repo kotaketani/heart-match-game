@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ふたりの心あてゲーム</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="hero card">
+        <p class="eyebrow">HEART MATCH SESSION</p>
+        <h1>ふたりの心あてゲーム</h1>
+        <p class="lead">
+          正解を競うより、答えの理由を話して仲を深める2人用の心理ゲームです。
+          回答して、予想して、答え合わせして、自然に会話を広げられます。
+        </p>
+      </section>
+
+      <section id="setup-panel" class="card setup-panel">
+        <div class="setup-header">
+          <div>
+            <p class="section-label">セッション設定</p>
+            <h2>今日はどんな空気で遊ぶ？</h2>
+          </div>
+          <button id="start-button" class="primary">ゲーム開始</button>
+        </div>
+
+        <article class="setup-block online-block">
+          <h3>プレイ方法</h3>
+          <p class="muted">同じ端末で交互に遊ぶか、オンラインでリアルタイム接続するか選べます。</p>
+          <div id="play-mode-options" class="chip-row"></div>
+
+          <div id="online-controls" class="online-controls" hidden>
+            <div class="online-grid">
+              <div>
+                <p class="mini-label">あなたの役割</p>
+                <div id="role-options" class="chip-row"></div>
+              </div>
+              <div>
+                <p class="mini-label">ルームコード</p>
+                <div class="room-row">
+                  <input id="room-code-input" class="room-input" type="text" maxlength="6" placeholder="例: HART12" />
+                  <button id="create-room-button" class="ghost" type="button">作成</button>
+                  <button id="join-room-button" class="ghost" type="button">参加</button>
+                </div>
+              </div>
+            </div>
+            <div class="online-status">
+              <span id="online-status-label">オンライン未接続</span>
+              <span id="peer-status-label">相手未参加</span>
+            </div>
+            <p id="online-help" class="tip">
+              GitHub Pages だけではリアルタイム同期できないため、Supabase Realtime の設定が必要です。
+            </p>
+          </div>
+        </article>
+
+        <div class="setup-grid">
+          <article class="setup-block">
+            <h3>モード</h3>
+            <p class="muted">重さを避けつつ、雰囲気に合う質問だけを出します。</p>
+            <div id="mode-options" class="chip-row"></div>
+          </article>
+
+          <article class="setup-block">
+            <h3>深さレベル</h3>
+            <p class="muted">軽い話題から少し深いテーマまで段階的に選べます。</p>
+            <div id="depth-options" class="chip-row"></div>
+          </article>
+
+          <article class="setup-block">
+            <h3>カテゴリ</h3>
+            <p class="muted">気になるテーマだけ選ぶことも、まんべんなく遊ぶこともできます。</p>
+            <div id="category-options" class="chip-row"></div>
+          </article>
+        </div>
+
+        <div class="setup-footer">
+          <p class="tip">おすすめ: 「ほんわか」か「恋愛」で、深さはレベル2までにすると始めやすいです。</p>
+        </div>
+      </section>
+
+      <section id="game-panel" class="card" hidden>
+        <div class="status-top">
+          <div>
+            <p class="section-label">進行</p>
+            <div class="status-row">
+              <span id="round-label">1 / 6</span>
+              <span id="gauge-label">理解度 0%</span>
+            </div>
+          </div>
+          <div class="pass-tracker">
+            <span id="girlfriend-pass-label">彼女パス 3</span>
+            <span id="you-pass-label">あなたパス 3</span>
+          </div>
+        </div>
+        <div id="session-banner" class="session-banner" hidden>
+          <span id="session-mode-label">ローカル</span>
+          <span id="session-room-label">ROOM -</span>
+          <span id="session-role-label">あなた: -</span>
+        </div>
+
+        <div class="meter-shell">
+          <div id="gauge-fill" class="meter-fill"></div>
+        </div>
+
+        <div id="question-meta" class="question-meta">
+          <span id="category-badge" class="badge"></span>
+          <span id="depth-badge" class="badge"></span>
+          <span id="mode-badge" class="badge"></span>
+        </div>
+
+        <div class="question-box">
+          <p class="section-label">お題</p>
+          <h2 id="question-text"></h2>
+          <p id="question-note" class="muted"></p>
+        </div>
+
+        <div id="turn-view" class="turn-view">
+          <p class="section-label" id="phase-label"></p>
+          <h3 id="turn-title"></h3>
+          <p id="turn-instruction" class="instruction"></p>
+          <div id="answer-grid" class="answer-grid"></div>
+          <div class="turn-actions">
+            <button id="pass-button" class="ghost">このお題をパス</button>
+          </div>
+        </div>
+
+        <div id="transition-view" class="transition-view" hidden>
+          <p id="transition-text"></p>
+          <button id="next-phase-button" class="primary">つづける</button>
+        </div>
+
+        <div id="result-view" class="result-view" hidden>
+          <p class="section-label">結果</p>
+          <div class="result-cards">
+            <article class="result-card">
+              <span id="responder-label">回答者の答え</span>
+              <strong id="actual-answer"></strong>
+            </article>
+            <article class="result-card">
+              <span id="predictor-label">予想した答え</span>
+              <strong id="predicted-answer"></strong>
+            </article>
+            <article class="result-card">
+              <span>判定</span>
+              <strong id="judgement-text"></strong>
+            </article>
+          </div>
+          <p id="round-feedback" class="feedback"></p>
+
+          <div class="deep-dive">
+            <p class="section-label">深掘り</p>
+            <p id="deep-dive-text"></p>
+          </div>
+
+          <button id="next-round-button" class="primary">次のお題へ</button>
+        </div>
+      </section>
+
+      <section id="final-panel" class="card final-panel" hidden>
+        <p class="section-label">セッション結果</p>
+        <h2 id="final-title"></h2>
+        <p id="final-message" class="lead"></p>
+
+        <div class="summary-list">
+          <article class="summary-item">
+            <span>理解度ゲージ</span>
+            <strong id="summary-gauge"></strong>
+          </article>
+          <article class="summary-item">
+            <span>正解数</span>
+            <strong id="summary-score"></strong>
+          </article>
+          <article class="summary-item">
+            <span>連続正解</span>
+            <strong id="summary-streak"></strong>
+          </article>
+        </div>
+
+        <div class="final-details">
+          <article class="final-card">
+            <p class="section-label">カテゴリ別一致率</p>
+            <div id="category-summary" class="stack-list"></div>
+          </article>
+          <article class="final-card">
+            <p class="section-label">今日わかったこと 3つ</p>
+            <div id="insight-summary" class="stack-list"></div>
+          </article>
+        </div>
+
+        <div class="hero-actions">
+          <button id="restart-button" class="primary">もう一度遊ぶ</button>
+          <button id="change-settings-button" class="ghost">設定を変える</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
